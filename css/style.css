@@ -1,0 +1,28 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Jost', sans-serif;
+    background-color: #0d8a37;
+}
+
+h1 {
+    font-size: 3rem;
+    color: #fff;
+    text-align: center;
+    margin: 2rem 0;
+}
+
+#mapa {
+    margin: 10px auto;
+    display:grid;
+    grid-template-columns: repeat(15, 50px);
+    grid-template-rows: repeat(15, 50px);
+    width: 750px;
+    height: 750px;
+    margin: 0 auto;
+    background-color: #fff;
+}
