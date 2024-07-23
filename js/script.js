@@ -101,7 +101,7 @@ function comprobacion(tecla) {
       return null;
   }
 }
-document.getElementById("movimientos").addEventListener("keydown", escucha);
+// document.getElementById("movimientos").addEventListener("keydown", escucha);
 
 
 function escucha(event){
