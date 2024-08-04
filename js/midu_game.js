@@ -1,8 +1,11 @@
 /* global Phaser */
 
 import { createAnimations } from "./animations.js";
+import { checkControls } from "./controls.js";
 
 const config = {
+  // evitar que nos cambie el foco cada vez que modificamos algo
+  autoFocus: false,
   type: Phaser.AUTO,
   width: 256,
   height: 244,
@@ -41,7 +44,16 @@ function preload() {
     { frameWidth: 18, frameHeight: 16 }
   )
   
-  this.load.audio('gameover', 'assets/sound/music/gameover.mp3')
+  this.load.spritesheet(
+    'goomba',
+    'assets/entities/overworld/goomba.png',
+    { frameWidth: 16, frameHeight: 16 }
+  )
+
+  this.load.audio(
+    'gameover',
+    'assets/sound/music/gameover.mp3'
+  )
 }
 
 function create() {
@@ -52,12 +64,8 @@ function create() {
     // escala: 0.5 = 50%, 2 = 200%...
     .setScale(0.15);
 
-  // carga mapa de sprites básico con suelo:
-  // posicion x, y; ancho y alto; id recurso
-  /* this.add.tileSprite(0, config.height - 32, config.width, 32, 'floorbricks')
-  .setOrigin(0,0); */
 
-  // pero creamos un grupo estático físico de suelos:
+  // creamos un grupo estático físico de suelos:
   this.floor = this.physics.add.staticGroup();
 
   this.floor
@@ -66,7 +74,7 @@ function create() {
     .refreshBody();
 
   this.floor
-    .create(150, config.height - 16, 'floorbricks')
+    .create(160, config.height - 16, 'floorbricks')
     .setOrigin(0, 0.5)
     .refreshBody();
 
@@ -80,86 +88,60 @@ function create() {
     .setCollideWorldBounds(true)
     .setGravityY(300)
     
+    this.enemy = this.physics.add.sprite(120, config.height - 64, 'goomba')
+    .setOrigin(0, 1)
+    .setGravityY(300)
+    .setVelocityX(-50)
+    
   this.physics.world.setBounds(0, 0, 2000, config.height)
   this.physics.add.collider(this.mario, this.floor)
+  this.physics.add.collider(this.enemy, this.floor)
+  this.physics.add.collider(this.mario, this.enemy,
+    onHitEnemy, null, this
+  )
+  
 
   this.cameras.main.setBounds(0, 0, 2000, config.height)
   this.cameras.main.startFollow(this.mario)
-
-  // crear animaciones
-/*   this.anims.create(
-    {
-      key: 'mario-walk',
-      frames: this.anims.generateFrameNumbers(
-        'mario', { start: 3, end: 2 }
-      ),
-      frameRate: 12,
-      repeat: -1  // repetir indefinidamente
-    }
-  )
-  
-  this.anims.create(
-    {
-      key: 'mario-idle',
-      frames: this.anims.generateFrameNumbers(
-        'mario', { start: 0, end: 0 }
-      ),
-      frameRate: 12
-    }
-  )
-  this.anims.create(
-    {
-      key: 'mario-jump',
-      frames: this.anims.generateFrameNumbers(
-        'mario', { start: 5, end: 5 }
-      ),
-      frameRate: 12
-    }
-  ) */
 
   createAnimations(this)
 
   this.keys = this.input.keyboard.createCursorKeys();
 }
 
-function update() {
-  if (this.mario.isDead) {
-    return
-  }
-  if (this.keys.left.isDown) {
-    this.mario.anims.play('mario-walk', true)
-    this.mario.x -= 2
-    this.mario.flipX = true
-  } else if (this.keys.right.isDown) {
-    this.mario.anims.play('mario-walk', true)
-    this.mario.x += 2
-    this.mario.flipX = false
+function onHitEnemy(mario, enemy) {
+  if (mario.body.touching.down && enemy.body.touching.up) {
+    enemy.destroy()
+    mario.setVelocityY(-200)
   } else {
-    this.mario.anims.play('mario-idle', true)
+
   }
+}
 
-  /*   if (this.keys.up.isDown) {
-      this.mario.y -= 4
-      this.mario.anims.play('mario-jump', true)
-    } */
+function update() {
+  const { mario, sound, scene } = this
+  
+  checkControls(this)
 
-  if (this.keys.up.isDown && this.mario.body.touching.down) {
-    this.mario.setVelocityY(-300)
-    this.mario.anims.play('mario-jump', true)
-  }
+  // comprueba si Mario ha muerto
+  if (mario.y >= config.height) {
+    mario.isDead = true
+    mario.anims.play('mario-dead')
+    mario.setCollideWorldBounds(false)
+    // Da error al tratar de usar el audio
+    try {
+      sound.add('gameover', { volume: 0.2 }).play()
+    } catch (error) {
 
-  if (this.mario.y >= config.height) {
-    this.mario.isDead = true
-    this.mario.anims.play('mario-dead')
-    this.mario.setCollideWorldBounds(false)
-    this.sound.add('gameover', { volume: 0.2}).play()
+    }
 
     setTimeout(() => {
-      this.mario.setVelocityY(-300)
+      mario.setVelocityY(-300)
     }, 200);
 
     setTimeout(() => {
-      this.scene.restart()
-    }, 3400);
+      scene.restart()
+    }, 2200);
   }
+  
 }
