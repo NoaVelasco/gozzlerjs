@@ -1,7 +1,10 @@
 /* global Phaser */
 
 import { createAnimations } from "./animations.js";
+import { initAudio } from "./audio.js";
+import { playAudio } from "./audio.js";
 import { checkControls } from "./controls.js";
+import { initSpritesheet } from "./spritesheet.js";
 
 const config = {
   // evitar que nos cambie el foco cada vez que modificamos algo
@@ -28,6 +31,8 @@ const config = {
 new Phaser.Game(config);
 
 function preload() {
+
+  // --------- IMAGENES ---------
   this.load.image(
     'cloud1',
     'assets/scenery/overworld/cloud1.png'
@@ -38,25 +43,14 @@ function preload() {
     'assets/scenery/overworld/floorbricks.png'
   )
 
-  this.load.spritesheet(
-    'mario',
-    'assets/entities/mario.png',
-    { frameWidth: 18, frameHeight: 16 }
-  )
-  
-  this.load.spritesheet(
-    'goomba',
-    'assets/entities/overworld/goomba.png',
-    { frameWidth: 16, frameHeight: 16 }
-  )
+  initSpritesheet(this)
 
-  this.load.audio(
-    'gameover',
-    'assets/sound/music/gameover.mp3'
-  )
+  initAudio(this)
+
 }
 
 function create() {
+  createAnimations(this)
   // posicion x, y + id imagen 
   this.add.image(100, 50, 'cloud1')
     // origen xy: 0-1; 0,0 arriba izq. / 1,1 abajo der.
@@ -88,11 +82,19 @@ function create() {
     .setCollideWorldBounds(true)
     .setGravityY(300)
     
-    this.enemy = this.physics.add.sprite(120, config.height - 64, 'goomba')
+  this.enemy = this.physics.add.sprite(120, config.height - 64, 'goomba')
     .setOrigin(0, 1)
     .setGravityY(300)
     .setVelocityX(-50)
+  
+  this.coins = this.physics.add.staticGroup();
+  this.coins.create(100, 200, 'coin')
+    .anims.play('coin-idle', true)
+  this.coins.create(300, 120, 'coin')
+    .anims.play('coin-idle', true)
     
+  // ------- FÍSICAS Y COLISIONES ----------
+  this.physics.add.overlap(this.mario, this.coins, collectCoin, null, this)
   this.physics.world.setBounds(0, 0, 2000, config.height)
   this.physics.add.collider(this.mario, this.floor)
   this.physics.add.collider(this.enemy, this.floor)
@@ -101,47 +103,70 @@ function create() {
   )
   
 
+  // ------- CAMARA ----------
   this.cameras.main.setBounds(0, 0, 2000, config.height)
   this.cameras.main.startFollow(this.mario)
 
-  createAnimations(this)
+  this.enemy.anims.play('goomba-walk', true)
 
   this.keys = this.input.keyboard.createCursorKeys();
 }
 
-function onHitEnemy(mario, enemy) {
-  if (mario.body.touching.down && enemy.body.touching.up) {
-    enemy.destroy()
-    mario.setVelocityY(-200)
-  } else {
-
-  }
-}
-
 function update() {
-  const { mario, sound, scene } = this
+  const { mario } = this
   
   checkControls(this)
 
   // comprueba si Mario ha muerto
-  if (mario.y >= config.height) {
-    mario.isDead = true
-    mario.anims.play('mario-dead')
-    mario.setCollideWorldBounds(false)
-    // Da error al tratar de usar el audio
-    try {
-      sound.add('gameover', { volume: 0.2 }).play()
-    } catch (error) {
-
-    }
-
-    setTimeout(() => {
-      mario.setVelocityY(-300)
-    }, 200);
-
-    setTimeout(() => {
-      scene.restart()
-    }, 2200);
+  if (mario.y >= config.height && !mario.isDead) {
+    killMario(this)
   }
   
 }
+  
+function onHitEnemy(mario, enemy) {
+  if (mario.body.touching.down && enemy.body.touching.up && !mario.isDead) {
+    enemy.anims.play('goomba-dead', true)
+    enemy.setVelocityX(0)
+    mario.setVelocityY(-200)
+
+    playAudio('goomba-stomp', this)
+    
+    setTimeout(() => {
+      enemy.destroy()
+    }, 500);
+  } else {
+    killMario(this)
+  }
+}
+
+
+function killMario(game) {
+  const { mario, scene } = game
+
+  if (mario.isDead) return
+
+  mario.isDead = true;
+  mario.anims.play("mario-dead");
+  mario.setCollideWorldBounds(false);
+
+  // Da error al tratar de usar el audio
+  playAudio("gameover", game, { volume: 0.2 });
+  
+  mario.body.checkCollision.none = true
+  mario.setVelocityX(0);
+  
+  setTimeout(() => {
+    mario.setVelocityY(-350);
+  }, 100);
+  
+  setTimeout(() => {
+    scene.restart();
+  }, 3200);
+}
+
+  function collectCoin(mario, coin) {
+    // console.log({mario, coin});
+    coin.disableBody(true, true)
+    playAudio("coin-pickup", this, { volume: 0.1 });
+  }
