@@ -1,3 +1,17 @@
+const MARIO_ANIMATIONS = {
+  grown: {
+    idle: 'mario-grown-idle',
+    // walk: 'mario-grown-walk',
+    // jump: 'mario-grown-jump',
+  },
+  normal: {
+    idle: 'mario-idle',
+    walk: 'mario-walk',
+    jump: 'mario-jump',
+    dead: 'mario-dead',
+  },
+}
+
 export function checkControls({ mario, keys }) {
 
   const isMarioGrounded = mario.body.touching.down;
@@ -6,9 +20,13 @@ export function checkControls({ mario, keys }) {
   const isRightKeyDown = keys.right.isDown;
   const isUpKeyDown = keys.up.isDown;
 
-  if (mario.isDead) {
-    return;
-  }
+  if (mario.isDead) return;
+  if (mario.isBlocked) return;
+
+  const marioAnimations = mario.isRightKeyDown
+    ? MARIO_ANIMATIONS.grown
+    : MARIO_ANIMATIONS.normal;
+
 
   if (isLeftKeyDown) {
     // no conozco esta sintaxis, pero así solo anda si está en el suelo
@@ -20,7 +38,7 @@ export function checkControls({ mario, keys }) {
     mario.x += 2;
     mario.flipX = false;
   } else if (isMarioGrounded) {
-    mario.anims.play("mario-idle", true);
+    mario.anims.play(marioAnimations.idle, true);
   }
 
   if (isUpKeyDown && isMarioGrounded) {

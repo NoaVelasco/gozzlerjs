@@ -43,6 +43,11 @@ function preload() {
     'assets/scenery/overworld/floorbricks.png'
   )
 
+  this.load.image(
+    'supermushroom',
+    'assets/collectibles/super-mushroom.png'
+  )
+
   initSpritesheet(this)
 
   initAudio(this)
@@ -87,14 +92,15 @@ function create() {
     .setGravityY(300)
     .setVelocityX(-50)
   
-  this.coins = this.physics.add.staticGroup();
-  this.coins.create(100, 200, 'coin')
+  this.collectibles = this.physics.add.staticGroup();
+  this.collectibles.create(100, 200, 'coin')
     .anims.play('coin-idle', true)
-  this.coins.create(300, 120, 'coin')
+  this.collectibles.create(300, 120, 'coin')
     .anims.play('coin-idle', true)
+  this.collectibles.create(200, config.height-40, 'supermushroom')
     
   // ------- FÍSICAS Y COLISIONES ----------
-  this.physics.add.overlap(this.mario, this.coins, collectCoin, null, this)
+  this.physics.add.overlap(this.mario, this.collectibles, collectItem, null, this)
   this.physics.world.setBounds(0, 0, 2000, config.height)
   this.physics.add.collider(this.mario, this.floor)
   this.physics.add.collider(this.enemy, this.floor)
@@ -131,6 +137,7 @@ function onHitEnemy(mario, enemy) {
     mario.setVelocityY(-200)
 
     playAudio('goomba-stomp', this)
+    addToScore(200, enemy, this)
     
     setTimeout(() => {
       enemy.destroy()
@@ -165,8 +172,78 @@ function killMario(game) {
   }, 3200);
 }
 
-  function collectCoin(mario, coin) {
-    // console.log({mario, coin});
-    coin.disableBody(true, true)
+function collectItem(mario, item) {
+  const { texture: { key } } = item
+
+  item.destroy()
+
+  if (key === "coin") {
+    
+    // item.disableBody(true, true)
+    // item.destroy()
     playAudio("coin-pickup", this, { volume: 0.1 });
+    
+    addToScore(100, item, this)
+  } else if (key === "supermushroom") {
+    this.physics.world.pause()
+    this.anims.pauseAll()
+
+    playAudio("powerup", this, { volume: 0.2 })
+    
+    let i = 0;
+    
+    const interval = setInterval(() => {
+      i++
+      mario.anims.play(i % 2 === 0
+        ? 'mario-grown-idle'
+        : 'mario-idle', true
+      )
+    }, 100);
+    // mario.anims.play('mario-grown-idle', true)
+    // mario.setSize()
+
+    mario.refreshBody()
+    
+    mario.isBlocked = true
+    
+    setTimeout(() => {
+      mario.isGrown = true
+      mario.setDisplaySize(18, 32)
+      mario.body.setSize(18, 32)
+      this.anims.resumeAll()
+      mario.isBlocked = false
+      clearInterval(interval)
+      this.physics.world.resume()
+    }, 1000);
+
   }
+}
+  
+function addToScore(scoreToAdd, origin, game) {
+  const scoreText = game.add.text(
+    origin.x,
+    origin.y,
+    scoreToAdd,
+    {
+      fontFamily: 'pixel',
+      fontSize: config.width / 40
+    }
+  )
+
+  game.tweens.add({
+    targets: scoreText,
+    duration: 1000,
+    y: scoreText.y - 20,
+    onComplete: () => {
+      game.tweens.add({
+      targets: scoreText,
+      duration: 100,
+        alpha: 0,
+        onComplete: () => {
+          scoreText.destroy()
+        }
+    })
+    }
+  })
+  
+}
