@@ -64,22 +64,20 @@ class Example extends Phaser.Scene {
       32 + GRID_PX * 13,
       "spotPlayer"
     );
+
     this.player = this.add.image(32 + GRID_PX, 32 + GRID_PX * 13, "duck");
     this.player.direction = [0, 0];
     this.player.isDelayed = false;
 
-    // console.log(this.player.direction)
-
     this.keys = this.input.keyboard.createCursorKeys();
-
-    // this.listenToKeys = true;
-    // console.log(-GRID_PX);
   }
   update() {
     const { player, keys, layer } = this;
+
+    // Si la dirección es [0,0], las teclas escuchan
     if (!player.direction.includes(64) && !player.direction.includes(-64)) {
+      // Si se presiona una tecla, configura la dirección y el angulo de player
       if (keys.right.isDown) {
-        // player.direction = [0, 0];
         player.direction = [64, 0];
         player.angle = 0;
         player.flipX = false;
@@ -106,105 +104,35 @@ class Example extends Phaser.Scene {
         }
       }
     } else {
+      // Cuando hay dirección, se mueve cuando sale del modo delay (con timeOut)
       if (!this.player.isDelayed) {
         this.moving();
       }
     }
-    //  Left
-    this.input.keyboard.on("keydown-A", (event) => {
-      const tile = layer.getTileAtWorldXY(player.x - GRID_PX, player.y, true);
-
-      if (tile.index === 20) {
-        //  Blocked, we can't move
-      } else {
-        player.x -= GRID_PX;
-      }
-      player.angle = 0;
-      player.flipX = true;
-    });
-
-    //  Right
-    this.input.keyboard.on("keydown-D", (event) => {
-      let tile = layer.getTileAtWorldXY(player.x + GRID_PX, player.y, true);
-
-      player.angle = 0;
-      player.flipX = false;
-
-      if (tile.index === 20) {
-        //  Blocked, we can't move
-      } else {
-        player.x += GRID_PX;
-      }
-    });
-
-    //  Up
-    this.input.keyboard.on("keydown-W", (event) => {
-      const tile = layer.getTileAtWorldXY(player.x, player.y - GRID_PX, true);
-
-      if (tile.index === 20) {
-        //  Blocked, we can't move
-      } else {
-        player.y -= GRID_PX;
-      }
-      if (player.flipX) {
-        player.angle = 90;
-      } else {
-        player.angle = -90;
-      }
-      // player.flipX = false;
-    });
-
-    //  Down
-    this.input.keyboard.on("keydown-S", (event) => {
-      const tile = layer.getTileAtWorldXY(player.x, player.y + GRID_PX, true);
-
-      if (tile.index === 20) {
-        //  Blocked, we can't move
-      } else {
-        player.y += GRID_PX;
-      }
-      if (player.flipX) {
-        player.angle = -90;
-      } else {
-        player.angle = 90;
-      }
-      // player.flipX = false;
-    });
-
-    /*       this.add.text(8, 8, "Move with WASD", {
-        fontSize: "18px",
-        fill: "#ffffff",
-        backgroundColor: "#000000",
-      }); */
   }
 
   moving() {
     const { player, layer } = this;
+
+    //  Localiza la casilla a la que se moverá.
     let tile = layer.getTileAtWorldXY(
       player.x + player.direction[0],
       player.y + player.direction[1],
       true
     );
 
-    // console.log(player.direction[0], player.direction[1]);
-
-    if (tile.index === 20) {
+    //  Si la casilla es un muro, se detiene.
+    //  Si no, se mueve y establece el modo Delay antes de moverse de nuevo.
+    if (tile.index === 31) {
       player.direction = [0, 0];
-      //  Blocked, we can't move
     } else {
-      if (!player.isDelayed) {
-        // console.log(player.x + parseInt(player.direction[0]), player.y + parseInt(player.direction[1]));
-        player.x += player.direction[0];
-        player.y += player.direction[1];
-        player.isDelayed = true;
+      player.x += player.direction[0];
+      player.y += player.direction[1];
+      player.isDelayed = true;
 
-        setTimeout(() => {
-          player.isDelayed = false;
-        }, 100);
-      }
-      // player.moving = true;
-      // player.x += player.direction[0];
-      // player.y += player.direction[1];
+      setTimeout(() => {
+        player.isDelayed = false;
+      }, 100);
     }
   }
 }

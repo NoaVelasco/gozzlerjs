@@ -52,7 +52,7 @@ class Example extends Phaser.Scene {
     this.input.keyboard.on("keydown-A", (event) => {
       const tile = layer.getTileAtWorldXY(player.x - 64, player.y, true);
 
-      if (tile.index === 20) {
+      if (tile.index === 31) {
         //  Blocked, we can't move
       } else {
         player.x -= 64;
@@ -65,7 +65,7 @@ class Example extends Phaser.Scene {
     this.input.keyboard.on("keydown-D", (event) => {
       const tile = layer.getTileAtWorldXY(player.x + 64, player.y, true);
 
-      if (tile.index === 20) {
+      if (tile.index === 31) {
         //  Blocked, we can't move
       } else {
         player.x += 64;
@@ -78,7 +78,7 @@ class Example extends Phaser.Scene {
     this.input.keyboard.on("keydown-W", (event) => {
       const tile = layer.getTileAtWorldXY(player.x, player.y - 64, true);
 
-      if (tile.index === 20) {
+      if (tile.index === 31) {
         //  Blocked, we can't move
       } else {
         player.y -= 64;
@@ -95,7 +95,7 @@ class Example extends Phaser.Scene {
     this.input.keyboard.on("keydown-S", (event) => {
       const tile = layer.getTileAtWorldXY(player.x, player.y + 64, true);
 
-      if (tile.index === 20) {
+      if (tile.index === 31) {
         //  Blocked, we can't move
       } else {
         player.y += 64;
