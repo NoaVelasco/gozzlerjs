@@ -1,0 +1,27 @@
+class Example extends Phaser.Scene {
+  preload() {
+    this.load.image(
+      "pic",
+      "/_assets/tiles/64x64/Tilesheet/platformPack_tilesheet.png"
+    );
+  }
+      "/_assets/tiles/64x64/Tilesheet/platformPack_tilesheet.png"
+
+  create() {
+    this.add.image(0, 0, "pic").setOrigin(0);
+  }
+}
+
+const config = {
+  type: Phaser.AUTO,
+  backgroundColor: "#2dab2d",
+  scale: {
+    mode: Phaser.Scale.FIT,
+    parent: "phaser-example",
+    width: 800,
+    height: 600,
+  },
+  scene: Example,
+};
+
+const game = new Phaser.Game(config);

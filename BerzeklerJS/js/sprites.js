@@ -28,6 +28,12 @@ const INIT_SPRITESHEETS = [
         path: "/_assets/player/land.png",
         frameWidth: 64,
         frameHeight: 64,
+    },
+    {
+        key: "celebrate",
+        path: "/_assets/player/climb_back.png",
+        frameWidth: 64,
+        frameHeight: 64,
     }
 ];
 

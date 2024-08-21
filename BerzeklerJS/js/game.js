@@ -1,39 +1,16 @@
-/* let matriz = [
-  [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-  [0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 3, 0],
-  [0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0],
-  [0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0],
-  [0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0],
-  [0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0],
-  [0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0],
-  [0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0],
-  [0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0],
-  [0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0],
-  [0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 0],
-  [0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 0],
-  [0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 0],
-  [0, 2, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0],
-  [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-]; */
-
 import { createAnimations } from "./animations.js";
 import { initAudio } from "./audio.js";
 import { playAudio } from "./audio.js";
 import { initSpritesheet } from "./sprites.js";
 
-// 0 = muro
-// 1 = suelo
-// 2 = personaje
-// 3 = llave
-
-const DEFAULT_WIDTH = 960;
-const DEFAULT_HEIGHT = 1024;
-const MAX_WIDTH = 1536;
-const MAX_HEIGHT = 864;
-let SCALE_MODE = "SMOOTH"; // FIT OR SMOOTH
+// FASE 1
+// 31 = muro
+// 17 = suelo
+// 1,14 = personaje
+// 14,1 = llave
 
 const GRID_PX = 64;
-const DELAY_X1 = 100;
+const DELAY_X1 = 250;
 
 class MainScene extends Phaser.Scene {
   preload() {
@@ -74,7 +51,6 @@ class MainScene extends Phaser.Scene {
     this.layer = map.createLayer(0, tileset, 0, 0);
 
     const spotKey = this.add.image(32 + GRID_PX * 13, 32 + GRID_PX, "spotKey");
-    // const key = this.add.image(32 + GRID_PX * 13, 32 + GRID_PX, "key");
 
     const spotPlayer = this.add.image(
       32 + GRID_PX,
@@ -98,36 +74,27 @@ class MainScene extends Phaser.Scene {
       if (checkOverlap(player, goal) && goal.visible) {
         playAudio("have-key", this, { volume: 0.2 });
         goal.destroy();
+        setTimeout(() => {
+          player.anims.play("player-win", true);
+        }, 300);
       };
       // Si se presiona una tecla, configura la dirección y el angulo de player
       if (keys.right.isDown) {
         player.direction = [64, 0];
-        // player.angle = 0;
         player.flipX = false;
         player.anims.play("roll-horiz", true);
       } else if (keys.left.isDown) {
         player.direction = [0, 0];
         player.direction = [-64, 0];
-        // player.angle = 0;
         player.flipX = true;
         player.anims.play("roll-horiz", true);
       } else if (keys.up.isDown) {
         player.direction = [0, 0];
         player.direction = [0, -64];
-        if (player.flipX) {
-          // player.angle = 90;
-        } else {
-          // player.angle = -90;
-        }
         player.anims.play("roll-vert", true);
       } else if (keys.down.isDown) {
         player.direction = [0, 0];
         player.direction = [0, 64];
-        if (player.flipX) {
-          // player.angle = -90;
-        } else {
-          // player.angle = 90;
-        }
         player.anims.play("roll-vert", true);
       }
     } else {
@@ -149,7 +116,7 @@ class MainScene extends Phaser.Scene {
     //  Si la casilla es un muro, se detiene.
     //  Si no, se mueve y establece el modo Delay antes de moverse de nuevo.
     if (tile.index === 31) {
-      playAudio("hit-wall", this);
+      playAudio("hit-wall", this, { volume: 0.2 });
       if (player.direction[0] !== 0) {
         player.anims.play("hit-horiz", true);
       }
@@ -157,8 +124,7 @@ class MainScene extends Phaser.Scene {
         player.anims.play("hit-vert", true);
       }
       player.direction = [0, 0];
-      // player.angle = 0;
-      // player.flipX = false;
+
       setTimeout(() => {
         player.anims.play("idle", true);
       }, 200);
@@ -169,7 +135,7 @@ class MainScene extends Phaser.Scene {
 
       setTimeout(() => {
         player.isDelayed = false;
-      }, 250);
+      }, DELAY_X1);
     }
   }
 }
@@ -183,79 +149,25 @@ function checkOverlap(spriteA, spriteB) {
 const config = {
   autoFocus: false,
   type: Phaser.AUTO,
-  width: 960,
-  height: 960,
-  parent: "game",
-  pixelArt: true,
-  backgroundColor: "#198044",
-  scene: MainScene,
   scale: {
-    // we do scale the game manually in resize()
-    mode: Phaser.Scale.NONE,
-    width: DEFAULT_WIDTH,
-    height: DEFAULT_HEIGHT,
+    mode: Phaser.Scale.FIT,
+    parent: "game",
+    // autoCenter: Phaser.Scale.CENTER_BOTH,
+    width: 960,
+    height: 960,
+    min: {
+      width: 480,
+      height: 480,
+    },
+    max: {
+      width: 960,
+      height: 960,
+    },
   },
+  pixelArt: true,
+  backgroundColor: "#cccccc",
+  scene: MainScene,
 };
 
-// const game = new Phaser.Game(config);
 
-// Para adaptar el tamaño al reescalar
-window.addEventListener("load", () => {
-  const game = new Phaser.Game(config);
-
-  const resize = () => {
-    const w = window.innerWidth;
-    const h = window.innerHeight;
-
-    let width = DEFAULT_WIDTH;
-    let height = DEFAULT_HEIGHT;
-    let maxWidth = MAX_WIDTH;
-    let maxHeight = MAX_HEIGHT;
-    let scaleMode = SCALE_MODE;
-
-    let scale = Math.min(w / width, h / height);
-    let newWidth = Math.min(w / scale, maxWidth);
-    let newHeight = Math.min(h / scale, maxHeight);
-
-    let defaultRatio = DEFAULT_WIDTH / DEFAULT_HEIGHT;
-    let maxRatioWidth = MAX_WIDTH / DEFAULT_HEIGHT;
-    let maxRatioHeight = DEFAULT_WIDTH / MAX_HEIGHT;
-
-    // smooth scaling
-    let smooth = 1;
-    if (scaleMode === "SMOOTH") {
-      const maxSmoothScale = 1.15;
-      const normalize = (value, min, max) => {
-        return (value - min) / (max - min);
-      };
-      if (width / height < w / h) {
-        smooth =
-          -normalize(newWidth / newHeight, defaultRatio, maxRatioWidth) /
-            (1 / (maxSmoothScale - 1)) +
-          maxSmoothScale;
-      } else {
-        smooth =
-          -normalize(newWidth / newHeight, defaultRatio, maxRatioHeight) /
-            (1 / (maxSmoothScale - 1)) +
-          maxSmoothScale;
-      }
-    }
-
-    // resize the game
-    game.scale.resize(newWidth * smooth, newHeight * smooth);
-
-    // scale the width and height of the css
-    game.canvas.style.width = newWidth * scale + "px";
-    game.canvas.style.height = newHeight * scale + "px";
-
-    // center the game with css margin
-    game.canvas.style.marginTop = `${(h - newHeight * scale) / 2}px`;
-    game.canvas.style.marginLeft = `${(w - newWidth * scale) / 2}px`;
-  };
-  window.addEventListener("resize", (event) => {
-    console.log("resize event");
-    resize();
-  });
-  console.log("resize at start");
-  resize();
-});
+const game = new Phaser.Game(config);

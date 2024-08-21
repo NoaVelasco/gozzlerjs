@@ -45,4 +45,14 @@ export const createAnimations = (game) => {
             end: 1
         })
     });
+
+    game.anims.create({
+        key: 'player-win',
+        frameRate: 8,
+        repeat: -1,
+        frames: game.anims.generateFrameNumbers('celebrate', {
+            start: 0,
+            end: 3
+        })
+    });
 }
